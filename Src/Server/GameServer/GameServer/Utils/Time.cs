@@ -31,19 +31,18 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
+
 class Time
 {
-    [DllImport("kernel32.dll")]
-    static extern bool QueryPerformanceCounter([In, Out] ref long lpPerformanceCount);
-    [DllImport("kernel32.dll")]
-    static extern bool QueryPerformanceFrequency([In, Out] ref long lpFrequency);
-
     static Time()
     {
+        _stopwatch = Stopwatch.StartNew();
         startupTicks = ticks;
     }
 
     private static long _frameCount = 0;
+    private static Stopwatch _stopwatch;
 
     /// <summary>
     /// The total number of frames that have passed (Read Only).
@@ -52,37 +51,19 @@ class Time
 
     static long startupTicks = 0;
 
-    static long freq = 0;
-
     /// <summary>
-    /// Tick count
+    /// 原作者英语水平不行
+    /// 这个 ticks 实际表示的是经过的毫秒数
     /// </summary>
     static public long ticks
     {
         get
         {
-            long f = freq;
-
-            if (f == 0)
-            {
-                if (QueryPerformanceFrequency(ref f))
-                {
-                    freq = f;
-                }
-                else
-                {
-                    freq = -1;
-                }
-            }
-            if (f == -1)
-            {
-                return Environment.TickCount * 10000;
-            }
-            long c = 0;
-            QueryPerformanceCounter(ref c);
-            return (long)(((double)c) * 1000 * 10000 / ((double)f));
+           _stopwatch.Stop();
+            return _stopwatch.ElapsedMilliseconds;
         }
     }
+
 
     private static long lastTick = 0;
     private static float _deltaTime = 0;
@@ -121,7 +102,7 @@ class Time
         get
         {
             long _ticks = ticks;
-            return (_ticks - startupTicks) / 10000000f;
+            return (_ticks - startupTicks) / 1000f;
         }
     }
 
@@ -135,8 +116,8 @@ class Time
             _frameCount = 0;
 
         if (lastTick == 0) lastTick = _ticks;
-        _deltaTime = (_ticks - lastTick) / 10000000f;
-        _time = (_ticks - startupTicks) / 10000000f;
+        _deltaTime = (_ticks - lastTick) / 1000f;
+        _time = (_ticks - startupTicks) / 1000f;
         lastTick = _ticks;
     }
 }
